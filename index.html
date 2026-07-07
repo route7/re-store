@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전자기록 결재과정 복원 · 통합 뷰어 (4건)</title>
+<style>
+:root{--navy:#2b3a52;--navy2:#3a4a63;--line:#d7dde5;--hl:#f4f7fb;--blue:#1a5fb4;
+--accent:#c0392b;--ink:#1f2733;--muted:#6b7683;--chip:#eef3f9;--ok:#1e7e34;}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff3;color:var(--ink);
+font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-size:13px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+.masthead{background:linear-gradient(135deg,#2b3a52,#3a4a63);color:#fff;border-radius:8px;padding:16px 20px;margin-bottom:14px}
+.masthead h1{margin:0;font-size:17px;letter-spacing:.5px}
+.masthead p{margin:5px 0 0;font-size:12px;opacity:.82}
+.recsel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+@media(max-width:760px){.recsel{grid-template-columns:1fr 1fr}}
+.recsel .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;transition:.12s;border-top:3px solid #cbd5e2}
+.recsel .card:hover{box-shadow:0 3px 10px rgba(30,60,110,.12)}
+.recsel .card.on{border-top-color:var(--blue);background:#f5f9ff;box-shadow:0 3px 10px rgba(30,60,110,.14)}
+.recsel .k{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.recsel .ty{border-radius:9px;padding:0 7px;font-size:10px;font-weight:700}
+.ty.지시카드{background:#fdecec;color:#b23025}.ty.일정{background:#eaf3ff;color:#1a5fb4}.ty.일지{background:#eafaef;color:#1e7e34}.ty.문서관리카드{background:#f0ecfb;color:#5b3fb0}
+.node.rpt .role{background:#4a5568}.node.dir .role{background:#c0392b}.node.end .role{background:#1e7e34}
+.psum{display:inline-block;background:#f0ecfb;border:1px solid #d9cef2;color:#5b3fb0;border-radius:10px;padding:2px 10px;font-size:11.5px;margin-left:6px}
+.recsel .ti{font-size:12.5px;font-weight:600;margin-top:5px;line-height:1.35}
+.recsel .mt{font-size:10.5px;color:var(--muted);margin-top:5px}
+.topbar{background:var(--navy);color:#fff;border-radius:8px 8px 0 0;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px}
+.topbar .sub{font-weight:400;font-size:12px;opacity:.8}
+.tabs{display:flex;gap:2px;background:var(--navy2);padding:0 8px;flex-wrap:wrap}
+.tabs button{background:transparent;color:#c9d3e0;border:none;padding:11px 15px;font-size:13px;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit}
+.tabs button:hover{color:#fff}.tabs button.on{color:#fff;border-bottom-color:#7fb0ec;font-weight:700}
+.panel{background:#fff;border:1px solid var(--line);border-top:none;padding:20px 22px;min-height:180px}
+.panel.hide{display:none}
+h2.sec{font-size:14px;color:var(--navy);margin:26px 0 10px;padding-left:9px;border-left:4px solid var(--blue)}
+h2.sec:first-child{margin-top:4px}
+table.meta{width:100%;border-collapse:collapse;font-size:12.5px}
+table.meta th,table.meta td{border:1px solid var(--line);padding:8px 10px;vertical-align:top}
+table.meta th{background:var(--hl);color:#42505f;font-weight:600;width:15%;text-align:left;white-space:nowrap}
+table.meta td{width:35%}
+.req{color:var(--accent);margin-right:3px}.val-open{color:var(--blue);font-weight:600}
+.badge{display:inline-block;background:var(--chip);color:#33506f;border:1px solid #cfe0f2;border-radius:10px;padding:1px 9px;font-size:11px;margin-left:4px}
+.badge.vip{background:#fdecec;border-color:#f3c2bd;color:#b23025}.badge.perm{background:#eafaef;border-color:#bfe6ca;color:#1e7e34}
+.flow{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;align-items:stretch}
+.node{flex:1 1 190px;min-width:180px;border:1px solid var(--line);border-radius:8px;background:#fbfcfe;padding:12px 14px}
+.node .role{font-size:11px;font-weight:700;color:#fff;background:var(--navy2);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:8px}
+.node.instr .role{background:var(--accent)}.node.prod .role{background:var(--blue)}.node.reg .role{background:var(--ok)}
+.node .who{font-size:15px;font-weight:700}.node .pos{color:var(--muted);font-size:12px}
+.node .dept{color:var(--muted);font-size:11.5px;margin-top:2px}
+.node .res{margin-top:8px;font-size:11.5px;color:var(--ok);font-weight:600}
+.node .op{margin-top:6px;font-size:11.5px;color:#41515f;border-top:1px dashed #e2e7ee;padding-top:6px}
+.arrow{align-self:center;color:#9fb0c4;font-size:20px;font-weight:700}
+.instrbox{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:#fff;margin-top:6px}
+.instrbox .q{color:var(--muted);font-size:11.5px;font-weight:600}.instrbox .a{margin:2px 0 12px;white-space:pre-wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.tl{position:relative;margin-top:8px;padding-left:26px}
+.tl:before{content:"";position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:#dbe3ec}
+.item{position:relative;margin-bottom:16px}
+.item:before{content:"";position:absolute;left:-22px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--blue)}
+.item.ilog:before{border-color:#e0a800}
+.item .hd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.item .dt{font-weight:700;color:var(--navy);font-size:12.5px}
+.item .kind{font-size:10.5px;border-radius:9px;padding:1px 8px;background:#e7f0fb;color:#1a5fb4;border:1px solid #cbe0f6}
+.item .kind.log{background:#fff6e0;color:#9a6b00;border-color:#f0dca6}
+.item .dept{font-size:11px;color:var(--muted)}
+.item .ti{font-weight:600;margin:3px 0}.item .body{font-size:12px;color:#3a4653;white-space:pre-wrap}
+.item .imp{font-size:11.5px;color:#8a5a00;background:#fffaf0;border-left:3px solid #e0a800;padding:5px 9px;margin-top:6px}
+.item .att{margin-top:6px}.att a{color:var(--blue);text-decoration:none;font-size:11.5px}.att a:before{content:"📎 "}
+table.files{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.files th,table.files td{border:1px solid var(--line);padding:8px 10px}
+table.files th{background:var(--navy2);color:#fff;font-weight:600;text-align:left}
+table.files tr:nth-child(even) td{background:#fafbfd}
+table.files .ic{width:34px;text-align:center;font-size:16px}
+table.files .sz{text-align:right;white-space:nowrap;color:#4a5765}
+.filelink{color:var(--blue);text-decoration:none}
+.dl{display:inline-block;background:var(--blue);color:#fff;text-decoration:none;border-radius:5px;padding:4px 12px;font-size:11.5px;font-weight:600}.dl:hover{background:#154c8f}
+.filesbar{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
+.viewer{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.viewer .vt{background:var(--hl);padding:8px 12px;font-size:12px;font-weight:600;color:#42505f;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.viewer select{font-family:inherit;font-size:12px;padding:3px 6px}
+.viewer iframe{width:100%;height:640px;border:none;background:#525659}
+.note{background:#f4f8fd;border:1px solid #d5e4f5;border-radius:6px;padding:10px 14px;font-size:12px;color:#3a4a5c;margin-top:12px}
+.hint{color:var(--muted);font-size:11.5px;margin:2px 0 0}
+.raw{white-space:pre-wrap;font-family:Consolas,monospace;font-size:11px;background:#0f1622;color:#cfe3ff;padding:14px;border-radius:8px;max-height:520px;overflow:auto}
+.empty{color:var(--muted);padding:26px;text-align:center}
+.footer{text-align:center;color:#9aa5b1;font-size:11px;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <h1>📁 전자기록 결재과정 복원 · 통합 뷰어</h1>
+    <p>대통령기록 장기보존포맷(v1.1) 기반 · 지시사항관리카드 1건 + 일지 4건 + 문서관리카드 1건 = 총 6건</p>
+  </div>
+  <div class="recsel" id="recsel"></div>
+  <div class="topbar">📑 기록건 상세조회 <span class="sub" id="hdrTitle"></span></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="p0"></div>
+  <div class="panel hide" id="p1"></div>
+  <div class="panel hide" id="p2"></div>
+  <div class="panel hide" id="p3"></div>
+  <div class="panel hide" id="p4"></div>
+  <div class="footer">각 건의 원문 XML·첨부파일은 files/ 폴더의 실제 파일로 제공됩니다.</div>
+</div>
+<script id="REC" type="application/json">{"records": [{"id": "101012120061120000115", "type": "지시카드", "tab": "① 지시사항관리카드", "meta": {"제목": "06년 하반기부터 기록관리 이관작업을 추진할 것", "전자기록건유형": "지시사항관리카드", "생산부서": "대통령", "생산일자": "2006.07.18", "공개유형": "비공개", "보존기간": "영구", "기록관리시스템건ID": "101012120061120000115", "기록관리시스템철ID": "101012120070010000033", "생산시스템건ID": "OD9969fc4f9fb40288f550607200552046", "첨부파일건수": "4", "MF필름번호": "50166", "MF시작페이지": "1400 ~ 1423", "MF매체번호": "MFLY50166N", "폐기여부": "현존"}, "instr": {"지시자": "대통령", "지시자직위": "대통령", "지시일자": "2006.07.18", "지시구분": "업무내용에 관한 지시", "VIP지시여부": "true", "지시제목": "06년 하반기부터 기록관리 이관작업을 추진할 것", "지시내용": "o 시스템적 쟁점 사안에 대하여 추가로 연구, 정리하고 보고 내용대로 하반기부터 기록관리 이관작업을 추진하기 바람", "지시계기": "수석ㆍ보좌관회의", "해당과제": "기록관리시스템(RMS) 구축", "추진계획": "- 8월 중으로 비서실 기록물 인수계획 수립(부서별 협의 및 시범-일부 부서 기록 인수수행) \n - 9월부터 전 부서의 기록물 인수 수행(05년도 생산기록물) \n - 12월 중으로 05년도 기록물 인수 완료", "이행방법": "조치", "진행상태": "지시종료", "진행상황": "", "관리부서": "국정상황실", "중간점검일자": "2007.01.08"}, "line": [{"역할": "이행주관", "부서명": "", "개인명": "임상경", "직위명": "기록관리비서관", "요청상태": "이행주관", "처리결과": "지시확인2006.07.21", "의견내용": "기록물 인수와 관련한 몇가지 쟁점 연구와 부서별로 충분한 협의를 거쳐 인수계획을 수립하여 차질없이 수행하겠습니다."}, {"역할": "이행참조", "부서명": "", "개인명": "이호철", "직위명": "국정상황실장", "요청상태": "이행참조", "처리결과": "지시처리", "의견내용": ""}, {"역할": "이행공유/협조", "부서명": "", "개인명": "김충환", "직위명": "업무혁신비서관", "요청상태": "이행협조", "처리결과": "지시확인", "의견내용": ""}, {"역할": "이행주관(처리)", "부서명": "", "개인명": "임상경", "직위명": "기록관리비서관", "요청상태": "이행주관", "처리결과": "지시확인2006.07.21", "의견내용": "기록물 인수와 관련한 몇가지 쟁점 연구와 부서별로 충분한 협의를 거쳐 인수계획을 수립하여 차질없이 수행하겠습니다."}], "timeline": [{"date": "20060804000000", "부서": "기록관리비서관실", "제목": "전자기록 인수계획 논의 결과 회의록", "구분": "일지", "내용": "참석자 : 임상경, 박용천, 강호출, 이영남. 배이철, 김인화 \n 내 용 \n 1. 신전자문서도 목록을 통보하고 받는 과정을 거치라 \n 2. 인수작업은 인수팀 뿐아니라 운영팀도 함께 참여 \n 3. 구이지원과 현이지원의 작업은 일시에 추진 \n 4. 시범 이관시 의견조화와 본격이관시 의견조회 별도로 가져갈 것. \n 5. 전체 일정표를 작성할 필요 있음", "개선": "", "첨부": [], "일자": "2006.08.04"}, {"date": "20060807134858", "부서": "기록관리비서관실", "제목": "대통령비서실 전자기록 인수인계 계획안 보고", "구분": "보고", "내용": "정부 출범이후 최초로 실시되는 대통령기록의 전자적 인계인수의 차질없는 수행을 위하여 정책적인 검토사항 및 그 절차를 정리하여 비서실내 공유하기 위함", "개선": "", "첨부": [], "일자": "2006.08.07 13:48"}, {"date": "20060808000000", "부서": "기록관리비서관실", "제목": "회의록", "구분": "일지", "내용": "참석자 : 박용천, 조영삼, 배이철, 김인화 \n 내 용 \n 1. 전체적으로 실무적인 계획이 부족하다.(시범기관 기록양, 부서별 일정, 각 담당자가 해야 할일) \n 2. 시범부서 인계를 위주로 실무적인 부분까지 조사하여 보고하자. \n 3. 역할 부분은 기록연구사가 모든 부분을 담당하기 어려운부분이 있다. 기능별로 역할을 분담하고 전문요원의 판단이 필요한 부분을 전문요원이 담당하도록 조정해야 한다.", "개선": "", "첨부": [], "일자": "2006.08.08"}, {"date": "20060808000000", "부서": "기록관리비서관실", "제목": "이지원 개발팀과 인수인계 방안 논의", "구분": "일지", "내용": "참석자 배이철, 김인화, 손기영, 유진 \n 요청내용 \n 1. 신전자 \n - 부서별, 단위업무별, 철명에 대한 정보요청 \n - 2년단위로 철이 되어있다. 1년단위로나뉘어도 조직정보가 없어서 무의미 하다. \n - 2004년 조직도에는 신전자 기록이 없다. \n 2. 구이지원 \n - 부서명 업무관리카드(제목, 추진일자 등) \n - 주관부서명 지시사항명(제목, 추진일자 등) \n 3. 과제종료시 이관이 가능한지 검토후 연락하겠음.", "개선": "", "첨부": [], "일자": "2006.08.08"}, {"date": "20060808000000", "부서": "기록관리비서관실", "제목": "전자기록인수 관련 회의", "구분": "일지", "내용": "참석자 : 조영삼, 배이철, 김인화, 손기영, 이신태 \n 내 용 \n 1. 구이지원 인수 \n - 실적->건, 과제->철 \n - 검수는 목록과 인계된 내용을 확인하면서 실시 \n 2. 신전자문서 인수 \n - 신전자 단위과제 및 기록철 목록을 뽑아서 업무분류(기능분류)체계에 적용방안 마련 \n 3. 의견조회 중점사항 \n - 의견조회 전에 지정기록의 기준, 구체적인 대상, 인계 및 이관후 관리 방안등에 대해서 상세하게 정의하여야 함 \n - 이 내용이 의견조회 전에 정리되어 의견조회에 참고되어야 함 \n 4.인수 인계는 조직단위로, 신전자, 이지원, 구이지원 순으로 제공되 \n 5.별도의 아르바이트 비용이 필요할수 밖에 없음", "개선": "", "첨부": [], "일자": "2006.08.08"}, {"date": "20060814000000", "부서": "기록관리비서관실", "제목": "회의록", "구분": "일지", "내용": "1. 타부서에서 인계인수된 기록의 재분류를 재검토 할필요가 있을 것인가 불가능하다면, 그 부담을 어떻게 경감해줄지 대책필요 - 기준을 제공하는 방안 밖에 없다. - 판단은 생산부서에서 할 수 밖에 없다. \n 2.준비작업에 대해 - 이영남 : 공개여부, 지정기록이 다 준비가 되어있으므로 실과 협의 과정에서 확정하면 된다. - 조영삼 : 공개여부 등 아직 안된 기록이 많음으로 미리 해놓고 대응해야 한다. \n 3. 역할분담 - 조연구사님 실별의견 취합하는 부분담당 - 이연구사님 지정기록 기준 등 정리 * 미국은 지정기록을 철보다 큰 단위인 시리즈 단위로 한다. * 현실적으로 철단위로 관리 할 수 밖에 없다. - 세부일정은 조연구사와 배계장 같이 조정 - 수요일 오후 3시에 다시 논의 하기로 함 \n 4. 분류체게 분류 - 구이지원은 기능분류 없이 - 신전자문서 기능분류 없이 \n 5. 기록관리담당관 지정 및 메뉴얼 준비(조영삼) \n 6. 구이지원의 공개구분 어떻게 할지(이지원팀과 협의) - 템플릿 상의 기준과 목록을 제공", "개선": "", "첨부": ["인수인계 실무추진안.hwp"], "일자": "2006.08.14"}, {"date": "20060814000000", "부서": "기록관리비서관실", "제목": "전자기록 목록요청", "구분": "일지", "내용": "03~05년도 기록물 인계인수 작업에 앞서 각 생산부서와 대상 기록에 대해 검토하고 대통령지정기록으로 보호대상을 선정하기 위하여 대상목록을 요청함", "개선": "", "첨부": ["목록요청서.hwp"], "일자": "2006.08.14"}, {"date": "20060816172105", "부서": "기록관리비서관실", "제목": "전자기록 시범인수를 위한 업무 추진계획", "구분": "보고", "내용": "전자기록의 인계인수에 필요한 내부 업무분장 및 시범 인수대상부서 의견조회를 위한 기록실 내부 업무 계획서", "개선": "", "첨부": [], "일자": "2006.08.16 17:21"}, {"date": "20060829162424", "부서": "기록관리비서관실", "제목": "인계인수분류기준관련보고", "구분": "보고", "내용": "인계인수 분류기준 수립과 분류작업 이행을 위한 추진계획(안)을 보고드리는 것임", "개선": "", "첨부": [], "일자": "2006.08.29 16:24"}, {"date": "20060907000000", "부서": "기록관리비서관실", "제목": "전자기록 시범인수 현황 및 계획", "구분": "일지", "내용": "1. 전자기록 시범 인계인수 사업(대통령지시사항, 조치시한 : ‘06. 12) \n □ 개 요 \n o 목 적 ­ 본격적인 전자기록의 인수에 압서 특성 있는 각 부서의 우선적인 추진을 통해서 문제점을 점검하고 이를 통해 전자기록을 원활히 인수하기 위함 \n o 대 상 ­ 각 수석실 별 선임비서관실을 대상으로 11개 비서관실에서 2003~2005년도 중 생산한 전자기록(구이지원․e지원․신전자문서시스템)을 인계 \n □ 추진 현황 \n o 각실 의견조회 진행 중 ­ 8.22 ~ 9. 1일 : 시범 부서의 기록관리담당관 교육 및 방문교육 ­ 9. 4 ~ 9. 8일 : 기록에 대한 보본기간, 공개여부 및 지정기록여부에 대한 의견 취합 및 재조정 \n o 각실 의견조회 현황 ­ 9. 6(수) 현재 5개부서의 의견을 접수하였으며 나머지 부서는 금주 중 의견을 제출키로 함 ­ 일부실의 경우 대부분의 과제를 지정기록으로 요청하고 있어 재협의 필요 ＊ 국정상황실의 경우 57개 중 48개 철 민정비서관실의 경우 32개 중 31개 철을 지정기록으로 요청 \n □ 향후 계획 \n o 기록 인계인수 작업예정 ­ 9. 7(목) 지정기록에 대한 협의가 완료된 실을 우선으로 인계인수 예정 ­ 9월말까지 시범 11개 부서에 대한 인계인수를 완료 후 결과를 정리 및 보고할 예정 ＊ 지정기록은 기록관리시스템 고도화 사업을 통해 관련기능 정비 후 인계인수 예정 \n o 전체 비서관실을 대상으로 인계인수 실시 ­ 시범인계인수 과정에서 문제점을 개선 반영하여 전체 비서실에서 생산된 전자기록 인수 예정 ­ ‘06년 말까지 ’05년도 생산된 모든 전자기록의 인계인수를 완료 목표(※ 지정기록 제외)", "개선": "각 실에서 의견취합이 늦어져서 재독촉 할 예정\n각 실에서 지나친 지정기록 요구는 재협의를 통해 조정해 나갈 예정", "첨부": [], "일자": "2006.09.07"}, {"date": "20060907000000", "부서": "기록관리비서관실", "제목": "회의록", "구분": "일지", "내용": "참석자 : 배이철, 이영남, 손은진 \n 내 용 \n 1. 각 실의 지정기록 의견에 대한 협의 방안 및 일정 \n - 우선 행정실에 대해 의견협의를 이번주중 완료 \n - 이번주 중 접수된 의견에 대해서는 다음주중 완료 \n \n 2. 각실 의견 제출 지연에 따른 향후 일정 관리방안 \n - 금일중 미제출 부서에 대해 통화하여 금주중 모든 의견을 제출토록 독려 \n - 전자기록 인계작업은 협의가 완료된 행정실 부터 다음주 초 부터 추진 \n 3. 본격적인 인수에 따른 검수 등 업무 분장 \n - 다음주 부터 조영삼, 배이철, 손은진, 김인화가 인수된 기록에 대한 검수작업 실시 \n - 검수 이후의 변환 작업은 정리 아르바이트를 선발하여 실시 \n * 현정리 인원 3명에 전자기록 인수를 위한 인력을 2명 추가하여 공통 관리하는 방안 논의중", "개선": "", "첨부": [], "일자": "2006.09.07"}, {"date": "20060915115256", "부서": "기록관리비서관실", "제목": "제2차 전자기록 인계인수 교육계획(안)", "구분": "보고", "내용": "1차 인계인수 작업을 9월중 마무리하고 그 결과를 바탕으로 전체 비서관실의 전자기록을 ‘06 하반기 중 인수하기 위한 교육 계획안", "개선": "", "첨부": [], "일자": "2006.09.15 11:52"}, {"date": "20060921104254", "부서": "기록관리비서관실", "제목": "전자기록인계인수 현황 및 추진계획 보고", "구분": "보고", "내용": "제1차 전자기록 인계인수 현황과 차후 실시할 예정인 인계인수 사업의 현황과 추진계획을 보고드림", "개선": "", "첨부": [], "일자": "2006.09.21 10:42"}, {"date": "20061012144842", "부서": "기록관리비서관실", "제목": "전자기록 정리를 위한 용역 추진안", "구분": "보고", "내용": "정부 출범이후 최초로 실시되는 대통령기록의 전자적 인계인수의 차질 없는 수행을 위하여 정리 및 영구보존포맷을 위해 용역을 신청함하기 위한 보고서 임", "개선": "", "첨부": [], "일자": "2006.10.12 14:48"}, {"date": "20061012200326", "부서": "기록관리비서관실", "제목": "전자기록 인계인수 사업 추진 현황 보고", "구분": "보고", "내용": "제1차 전자기록 인계인수 사업결과 및 제2차 사업계획을 보고 드림", "개선": "", "첨부": [], "일자": "2006.10.12 20:03"}, {"date": "20061030104817", "부서": "업무혁신비서관실", "제목": "대통령지정기록물 선정결과 통보", "구분": "보고", "내용": "- 전자기록 인계인수와 관련하여 기록관리비서관실과 협의한 우리실의 대통령 지정기록물 선정결과 통보를 보고 드림", "개선": "", "첨부": [], "일자": "2006.10.30 10:48"}, {"date": "20061108174930", "부서": "기록관리비서관실", "제목": "전자기록 인계인수 사업 추진현황 보고", "구분": "보고", "내용": "10.10부터 추진하여 현재 진행 중인 제2차 전자기록 인계인수사업의 추진현황을 보고함", "개선": "", "첨부": [], "일자": "2006.11.08 17:49"}, {"date": "20061207000000", "부서": "기록관리비서관실", "제목": "제2차 전자기록 인계인수사업 추진현황 2차 보고", "구분": "일지", "내용": "제2차 전자기록 인계인수사업 추진현황 2차 보고", "개선": "", "첨부": ["061207 2차 전자기록 인계인수 사업 추진 현황 보고.hwp"], "일자": "2006.12.07"}, {"date": "20061220181522", "부서": "기록관리비서관실", "제목": "제2차 전자기록 인계인수 사업 추진현황 3차보고", "구분": "보고", "내용": "06.10.10부터 진행되고 있는 제2차 전자기록 인계인수 사업의 추진현황에 대한 3차 보고를 드립니다.", "개선": "", "첨부": [], "일자": "2006.12.20 18:15"}, {"date": "20070330094452", "부서": "기록관리비서관실", "제목": "대통령상징물 행정박물 기초조사 결과보고", "구분": "보고", "내용": "○ 대통령상징물, 행정박물의 인계인수 및 이관계획 수립을 위해 기초조사를 실시한 바, 그 결과를 보고 드림", "개선": "", "첨부": [], "일자": "2007.03.30 09:44"}, {"date": "20070409162028", "부서": "기록관리비서관실", "제목": "제2차 전자기록 인계인수 사업 결과 보고", "구분": "보고", "내용": "'06.10.10부터 실시된 제2차 전자기록 인계인수 사업의 결과를 보고하고 제3차 전자기록 인계인수 사업 추진 계획을 보고함", "개선": "", "첨부": [], "일자": "2007.04.09 16:20"}], "attachments": [{"ext": "xml", "mime": "application/xml", "size": 1751835, "sizeh": "1.67 MB", "name": "1010121200611200001150000016.xml", "desc": "결재과정 XML (장기보존포맷)", "path": "files/rec1/1010121200611200001150000016.xml"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 21504, "sizeh": "21.00 KB", "name": "060718수보회의대통령말씀.hwp", "desc": "문서0 · 수보회의 대통령 말씀", "path": "files/rec1/060718수보회의대통령말씀.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 109056, "sizeh": "106.50 KB", "name": "061207 2차 전자기록 인계인수 사업 추진 현황 보고.hwp", "desc": "문서1 · 2차 인계인수 추진현황 보고", "path": "files/rec1/061207_2차_전자기록_인계인수_사업_추진_현황_보고.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 37888, "sizeh": "37.00 KB", "name": "인수인계 실무추진안.hwp", "desc": "문서2 · 전자기록 인수 방안", "path": "files/rec1/인수인계_실무추진안.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 16896, "sizeh": "16.50 KB", "name": "목록요청서.hwp", "desc": "문서3 · 전자기록 목록요청서", "path": "files/rec1/목록요청서.hwp"}, {"ext": "pdf", "mime": "application/pdf", "size": 268112, "sizeh": "261.83 KB", "name": "1010121200611200001150000017.pdf", "desc": "보존 PDF 1", "path": "files/rec1/1010121200611200001150000017.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 441524, "sizeh": "431.18 KB", "name": "1010121200611200001150000027.pdf", "desc": "보존 PDF 2", "path": "files/rec1/1010121200611200001150000027.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 140065, "sizeh": "136.78 KB", "name": "1010121200611200001150000037.pdf", "desc": "보존 PDF 3", "path": "files/rec1/1010121200611200001150000037.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 210442, "sizeh": "205.51 KB", "name": "1010121200611200001150000047.pdf", "desc": "보존 PDF 4", "path": "files/rec1/1010121200611200001150000047.pdf"}], "n": 9, "total_h": "2.86MB"}, {"id": "101021120061150000049", "type": "일지", "tab": "② 일지 · 현장실사 방문", "meta": {"제목": "기록관리시스템 소유권 이관 및 현장실사 방문", "전자기록건유형": "일지", "생산부서": "기록관리비서관실", "생산일자": "2006.07.19 11:53", "공개유형": "비공개", "보존기간": "영구", "기록관리시스템건ID": "101021120061150000049", "기록관리시스템철ID": "101021120070010000004", "생산시스템건ID": "af67ca71f8ff40288524060719115303", "첨부파일건수": "1", "폐기여부": "현존"}, "actors": [{"행위자유형": "생산자", "기관명": "대통령비서실", "부서명": "기록관리비서관실", "개인명": "배이철", "개인ID": "lcbae", "직위명": "행정관"}, {"행위자유형": "등록자"}], "journal": {"일지제목": "기록관리시스템 소유권 이관 및 현장실사 방문", "일지종류": "일지", "일지형태": "", "일정구분": "", "추진일자": "2006.07.19", "장소": "", "내용": "참석자 : \n 비서실 권웅기, 배이철 \n 행자부 행정정보화팀 송훈순 \n 전산원 행정정보화사업팀 강정무, 이정미 \n \n 내 용 : \n 1. 운영현황에 대한 비서실 보고 \n 2. 고도화 사업 필요성 내용 및 예산에 대하여 협의 \n 3. 기록관리시스템 기능 청취", "공유자": []}, "attachments": [{"ext": "xml", "mime": "application/xml", "size": 666501, "sizeh": "650.88 KB", "name": "10102111000002640000010_1010211200611500000490000016.xml", "desc": "일지 XML (장기보존포맷)", "path": "files/rec2/10102111000002640000010_1010211200611500000490000016.xml"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 124416, "sizeh": "121.50 KB", "name": "101021110000026400000200_로드맵_사업_실사_e지원기록관리시스템.hwp", "desc": "원문 문서 · 로드맵_사업_실사_e지원기록관리시스템.hwp", "path": "files/rec2/101021110000026400000200_로드맵_사업_실사_e지원기록관리시스템.hwp"}, {"ext": "pdf", "mime": "application/pdf", "size": 356768, "sizeh": "348.41 KB", "name": "101021110000026400000302_1010211200611500000490000017.pdf", "desc": "보존 PDF · 1010211200611500000490000017.pdf", "path": "files/rec2/101021110000026400000302_1010211200611500000490000017.pdf"}], "n": 3, "total_h": "1.09MB"}, {"id": "101021120071150000009", "type": "일지", "tab": "③ 일지 · 대통령권한대행 기록 기초조사", "meta": {"제목": "대통령권한대행 기록이관을 위한 기초조사", "전자기록건유형": "일지", "생산부서": "기록관리비서관실", "생산일자": "2007.06.26 21:59", "공개유형": "비공개", "보존기간": "영구", "기록관리시스템건ID": "101021120071150000009", "기록관리시스템철ID": "101021120070010000005", "생산시스템건ID": "ffe87553612402affc50706260959029", "첨부파일건수": "3", "폐기여부": "현존"}, "actors": [{"행위자유형": "생산자", "기관명": "대통령비서실", "부서명": "기록관리비서관실", "개인명": "이영남", "개인ID": "yj2000", "직위명": "행정관"}, {"행위자유형": "등록자"}], "journal": {"일지제목": "대통령권한대행 기록이관을 위한 기초조사", "일지종류": "일지", "일지형태": "", "일정구분": "", "추진일자": "2007.06.15", "장소": "", "내용": "대통령권한대행 기록이관을 위한 기초조사", "공유자": []}, "attachments": [{"ext": "xml", "mime": "application/xml", "size": 579837, "sizeh": "566.25 KB", "name": "10102111000004010000010_1010211200711500000090000016.xml", "desc": "일지 XML (장기보존포맷)", "path": "files/rec3/10102111000004010000010_1010211200711500000090000016.xml"}, {"ext": "xls", "mime": "application/vnd.ms-excel", "size": 14848, "sizeh": "14.50 KB", "name": "101021110000040100000400_대통령권한대행기록물보유현황국무총리_비서실_제출_070615.xls", "desc": "스프레드시트 원문 · 대통령권한대행기록물보유현황국무총리_비서실_제출_070615.xls", "path": "files/rec3/101021110000040100000400_대통령권한대행기록물보유현황국무총리_비서실_제출_070615.xls"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 14336, "sizeh": "14.00 KB", "name": "101021110000040100000600_070613_폐기심의_대상_기록물_조사국무조정실_제출_070615.hwp", "desc": "원문 문서 · 070613_폐기심의_대상_기록물_조사국무조정실_제출_070615.hwp", "path": "files/rec3/101021110000040100000600_070613_폐기심의_대상_기록물_조사국무조정실_제출_070615.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 43008, "sizeh": "42.00 KB", "name": "101021110000040100000800_070615_대통령권한대행기록물_보유현황_조사_결과국무조정실_제출.hwp", "desc": "원문 문서 · 070615_대통령권한대행기록물_보유현황_조사_결과국무조정실_제출.hwp", "path": "files/rec3/101021110000040100000800_070615_대통령권한대행기록물_보유현황_조사_결과국무조정실_제출.hwp"}, {"ext": "pdf", "mime": "application/pdf", "size": 53068, "sizeh": "51.82 KB", "name": "101021110000040100000502_1010211200711500000090000017.pdf", "desc": "보존 PDF · 1010211200711500000090000017.pdf", "path": "files/rec3/101021110000040100000502_1010211200711500000090000017.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 143194, "sizeh": "139.84 KB", "name": "101021110000040100000702_1010211200711500000090000027.pdf", "desc": "보존 PDF · 1010211200711500000090000027.pdf", "path": "files/rec3/101021110000040100000702_1010211200711500000090000027.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 145319, "sizeh": "141.91 KB", "name": "101021110000040100000902_1010211200711500000090000037.pdf", "desc": "보존 PDF · 1010211200711500000090000037.pdf", "path": "files/rec3/101021110000040100000902_1010211200711500000090000037.pdf"}], "n": 7, "total_h": "970.3KB"}, {"id": "101014620071150000725", "type": "일지", "tab": "④ 일지 · 이관대상 업무매뉴얼 정리", "meta": {"제목": "이관 대상 업무매뉴얼 정리", "전자기록건유형": "일지", "생산부서": "국정홍보비서관실", "생산일자": "2007.11.12 15:27", "공개유형": "비공개", "보존기간": "3년", "기록관리시스템건ID": "101014620071150000725", "기록관리시스템철ID": "101014620070010000049", "생산시스템건ID": "4352011a7316402affdb071112032702", "첨부파일건수": "3", "폐기여부": "현존"}, "actors": [{"행위자유형": "생산자", "기관명": "대통령비서실", "부서명": "국정홍보비서관실", "개인명": "김상철", "개인ID": "ksoul", "직위명": "행정관"}, {"행위자유형": "등록자"}], "journal": {"일지제목": "이관 대상 업무매뉴얼 정리", "일지종류": "일지", "일지형태": "", "일정구분": "", "추진일자": "2007.11.02", "장소": "", "내용": "-국정홍보 이관대상 주요 업무 매뉴얼 검토 및 정리", "공유자": []}, "attachments": [{"ext": "xml", "mime": "application/xml", "size": 9268496, "sizeh": "8.84 MB", "name": "10101461002463180000010_1010146200711500007250000016.xml", "desc": "일지 XML (장기보존포맷)", "path": "files/rec4/10101461002463180000010_1010146200711500007250000016.xml"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 129024, "sizeh": "126.00 KB", "name": "101014610024631800000400_PCRM 업무매뉴얼.hwp", "desc": "원문 문서 · PCRM 업무매뉴얼.hwp", "path": "files/rec4/101014610024631800000400_PCRM_업무매뉴얼.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 676352, "sizeh": "660.50 KB", "name": "101014610024631800000600_동영상 제작 업무매뉴얼.hwp", "desc": "원문 문서 · 동영상 제작 업무매뉴얼.hwp", "path": "files/rec4/101014610024631800000600_동영상_제작_업무매뉴얼.hwp"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 2396160, "sizeh": "2.29 MB", "name": "101014610024631800000800_청와대브리핑_운영_업무매뉴얼.hwp", "desc": "원문 문서 · 청와대브리핑_운영_업무매뉴얼.hwp", "path": "files/rec4/101014610024631800000800_청와대브리핑_운영_업무매뉴얼.hwp"}, {"ext": "pdf", "mime": "application/pdf", "size": 581941, "sizeh": "568.30 KB", "name": "101014610024631800000502_1010146200711500007250000017.pdf", "desc": "보존 PDF · 1010146200711500007250000017.pdf", "path": "files/rec4/101014610024631800000502_1010146200711500007250000017.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 929728, "sizeh": "907.94 KB", "name": "101014610024631800000702_1010146200711500007250000027.pdf", "desc": "보존 PDF · 1010146200711500007250000027.pdf", "path": "files/rec4/101014610024631800000702_1010146200711500007250000027.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 2127897, "sizeh": "2.03 MB", "name": "101014610024631800000902_1010146200711500007250000037.pdf", "desc": "보존 PDF · 1010146200711500007250000037.pdf", "path": "files/rec4/101014610024631800000902_1010146200711500007250000037.pdf"}], "n": 7, "total_h": "15.36MB"}, {"id": "101021120071150000002", "type": "일지", "tab": "⑤ 일지 · 대통령상징물 기초자료 수집", "meta": {"제목": "대통령상징물 이관계획수립을 위한 기초 자료 수집", "전자기록건유형": "일지", "생산부서": "기록관리비서관실", "생산일자": "2007.06.26 21:12", "공개유형": "비공개", "보존기간": "영구", "기록관리시스템건ID": "101021120071150000002", "기록관리시스템철ID": "101021120070010000003", "생산시스템건ID": "780bc8f960c402a89150706260912044", "첨부파일건수": "2", "폐기여부": "현존"}, "actors": [{"행위자유형": "생산자", "기관명": "대통령비서실", "부서명": "기록관리비서관실", "개인명": "이영남", "개인ID": "yj2000", "직위명": "행정관"}, {"행위자유형": "등록자"}], "journal": {"일지제목": "대통령상징물 이관계획수립을 위한 기초 자료 수집", "일지종류": "일지", "일지형태": "", "일정구분": "", "추진일자": "2007.02.05", "장소": "", "내용": "국가기록원에서 대통령상징물 이관계획수립을 위한 기초 자료 수집 \n (김대중 전대통령)", "공유자": []}, "attachments": [{"ext": "xml", "mime": "application/xml", "size": 376903, "sizeh": "368.07 KB", "name": "10102111000000560000010_1010211200711500000020000016.xml", "desc": "일지 XML (장기보존포맷)", "path": "files/rec5/10102111000000560000010_1010211200711500000020000016.xml"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 20992, "sizeh": "20.50 KB", "name": "101021110000005600000300_행정박물목록(김대중대통령).hwp", "desc": "원문 문서 · 행정박물목록(김대중대통령).hwp", "path": "files/rec5/101021110000005600000300_행정박물목록김대중대통령.hwp"}, {"ext": "xls", "mime": "application/vnd.ms-excel", "size": 36352, "sizeh": "35.50 KB", "name": "101021110000005600000500_김대중대통령행정박물목록.xls", "desc": "스프레드시트 원문 · 김대중대통령행정박물목록.xls", "path": "files/rec5/101021110000005600000500_김대중대통령행정박물목록.xls"}, {"ext": "pdf", "mime": "application/pdf", "size": 123056, "sizeh": "120.17 KB", "name": "101021110000005600000402_1010211200711500000020000017.pdf", "desc": "보존 PDF · 1010211200711500000020000017.pdf", "path": "files/rec5/101021110000005600000402_1010211200711500000020000017.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 85073, "sizeh": "83.08 KB", "name": "101021110000005600000602_1010211200711500000020000027.pdf", "desc": "보존 PDF · 1010211200711500000020000027.pdf", "path": "files/rec5/101021110000005600000602_1010211200711500000020000027.pdf"}], "n": 5, "total_h": "627.3KB"}, {"id": "313100020061100000011", "type": "문서관리카드", "tab": "⑥ 문서관리카드 · 지시사항 추진실적 이관 협조", "meta": {"제목": "대통령 지시사항 추진실적 이관 협조요청", "전자기록건유형": "문서관리카드", "생산부서": "균형발전총괄국", "생산일자": "2006.01.16 10:33", "공개유형": "비공개", "보존기간": "영구", "기록관리시스템건ID": "313100020061100000011", "기록관리시스템철ID": "313100020070010000021", "생산시스템건ID": "e3ee070af68b4027ffe0050824021403", "첨부파일건수": "2", "폐기여부": "현존"}, "line": [{"역할": "보고", "개인명": "정의용", "직위명": "사무관", "부서명": "균형발전총괄국", "처리결과": "업무보고입니다 2005.08.24 14:22", "의견내용": ""}, {"역할": "보고", "개인명": "이종화", "직위명": "과장", "부서명": "균형발전총괄국", "처리결과": "업무보고입니다 2005.08.24 15:07", "의견내용": ""}, {"역할": "보고", "개인명": "민영우", "직위명": "국장", "부서명": "균형발전총괄국", "처리결과": "업무보고입니다 2005.08.24 15:36", "의견내용": ""}, {"역할": "보고", "개인명": "반장식", "직위명": "국가균형비서관", "부서명": "국가균형위원회", "처리결과": "업무보고입니다 2005.08.29 09:07", "의견내용": ""}, {"역할": "지시", "개인명": "성경륭", "직위명": "국가균형위원장", "부서명": "국가균형위원회", "처리결과": "시행 2006.01.16 10:10", "의견내용": ""}, {"역할": "종료", "개인명": "정의용", "직위명": "사무관", "부서명": "균형발전총괄국", "처리결과": "종료 2006.01.16 10:33", "의견내용": ""}], "doc": {"문서취지": "업무혁신비서관실 협조요청 실행", "참조수": 7, "공람수": 49, "경로총수": 62}, "attachments": [{"ext": "xml", "mime": "application/xml", "size": 1888695, "sizeh": "1.80 MB", "name": "31310001000004010000010_3131000200611000000110000016.xml", "desc": "문서관리카드 XML (장기보존포맷)", "path": "files/rec6/31310001000004010000010_3131000200611000000110000016.xml"}, {"ext": "ppt", "mime": "application/octet-stream", "size": 322048, "sizeh": "314.50 KB", "name": "313100010000040100000300_위원회 지시사항 분배 및 실적이관.ppt", "desc": "원문 문서 · 위원회 지시사항 분배 및 실적이관.ppt", "path": "files/rec6/313100010000040100000300_위원회_지시사항_분배_및_실적이관.ppt"}, {"ext": "hwp", "mime": "application/x-hwp", "size": 9728, "sizeh": "9.50 KB", "name": "313100010000040100000500_업무협조(국정과제 관리시스템상의 대통령지시사항 처리실적 이관).hwp", "desc": "원문 문서 · 업무협조(국정과제 관리시스템상의 대통령지시사항 처리실적 이관).hwp", "path": "files/rec6/313100010000040100000500_업무협조국정과제_관리시스템상의_대통령지시사항_처리실적_이관.hwp"}, {"ext": "pdf", "mime": "application/pdf", "size": 876670, "sizeh": "856.12 KB", "name": "313100010000040100000402_3131000200611000000110000017.pdf", "desc": "보존 PDF · 3131000200611000000110000017.pdf", "path": "files/rec6/313100010000040100000402_3131000200611000000110000017.pdf"}, {"ext": "pdf", "mime": "application/pdf", "size": 99429, "sizeh": "97.10 KB", "name": "313100010000040100000602_3131000200611000000110000027.pdf", "desc": "보존 PDF · 3131000200611000000110000027.pdf", "path": "files/rec6/313100010000040100000602_3131000200611000000110000027.pdf"}], "n": 5, "total_h": "3.05MB"}]}</script>
+<script>
+const D=JSON.parse(document.getElementById('REC').textContent);
+const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const nl2=s=>esc(s).replace(/\n/g,'<br>');
+const icon=ext=>({pdf:'📕',hwp:'📄',xml:'🗂️',xls:'📊',xlsx:'📊'}[ext]||'📎');
+const href=a=>encodeURI(a.path);
+function download(a){const l=document.createElement('a');l.href=href(a);l.download=a.name;document.body.appendChild(l);l.click();l.remove();}
+let CUR=0;
+document.getElementById('recsel').innerHTML=D.records.map((r,i)=>`
+  <div class="card ${i===0?'on':''}" data-r="${i}">
+    <div class="k"><span>기록 ${i+1}</span><span class="ty ${r.type}">${r.type}</span></div>
+    <div class="ti">${esc(r.meta['제목'])}</div>
+    <div class="mt">${esc(r.meta['생산일자']||'').slice(0,10)} · 첨부 ${r.n}개 · ${r.total_h}</div></div>`).join('');
+function tabsFor(r){
+  if(r.type==='지시카드')return['기록건 상세','결재·처리과정','추진실적·일지','첨부파일','원본 XML'];
+  if(r.type==='문서관리카드')return['기록건 상세','결재·처리과정','문서취지·참여','첨부파일','원본 XML'];
+  return['기록건 상세','생산·처리과정',(r.type==='일정'?'일정 내용':'일지 내용'),'첨부파일','원본 XML'];}
+function row(l,v,cls){return `<th>${l}</th><td class="${cls||''}">${v==null?'':v}</td>`;}
+function filesTable(r){
+  const rows=r.attachments.map(a=>`<tr>
+    <td class="ic">${icon(a.ext)}</td>
+    <td><a href="${href(a)}" class="filelink" target="_blank">${esc(a.name)}</a><div class="hint">${esc(a.desc)}</div></td>
+    <td class="sz">${a.sizeh}</td>
+    <td style="text-align:center"><a href="${href(a)}" download="${esc(a.name)}" class="dl">다운로드</a></td></tr>`).join('');
+  return `<table class="files"><tr><th class="ic"></th><th>파일명</th><th class="sz">크기</th><th style="width:110px;text-align:center">받기</th></tr>${rows}</table>
+    <div class="filesbar"><span>${r.n} Files · 총 ${r.total_h}</span></div>`;
+}
+function renderDetail(r){const m=r.meta;
+  let extra;
+  if(r.type==='지시카드')extra=`<tr>${row('MF필름번호',m['MF필름번호'])}${row('MF 시작페이지','1400 ~ 1423')}</tr><tr>${row('MF매체번호',m['MF매체번호'])}${row('폐기여부',m['폐기여부'])}</tr>`;
+  else if(r.type==='문서관리카드')extra=`<tr>${row('문서취지',esc(r.doc['문서취지']))}${row('폐기여부','현존')}</tr>`;
+  else extra=`<tr>${row('추진일자',esc(r.journal['추진일자']))}${row('폐기여부','현존')}</tr>`;
+  return `<h2 class="sec">기록건 기본정보</h2><table class="meta">
+   <tr>${row('생산부서',esc(m['생산부서']))}${row('<span class="req">*</span>생산일자',esc(m['생산일자']))}</tr>
+   <tr>${row('전자기록건유형',esc(m['전자기록건유형'])+` <span class="badge">${r.type}</span>`)}${row('<span class="req">*</span>공개유형','<span class="val-open">'+esc(m['공개유형'])+'</span>')}</tr>
+   <tr>${row('제목',esc(m['제목']))}${row('보존기간',esc(m['보존기간'])+(m['보존기간']==='영구'?' <span class="badge perm">영구</span>':''))}</tr>
+   ${extra}
+   <tr>${row('기록건생산ID',esc(m['생산시스템건ID']))}${row('첨부파일',(r.n)+'개 (XML 포함)')}</tr>
+   <tr>${row('기록관리시스템건ID',esc(m['기록관리시스템건ID']))}${row('기록관리시스템철ID',esc(m['기록관리시스템철ID']))}</tr>
+  </table><h2 class="sec">첨부파일 (${r.n} Files · ${r.total_h})</h2>${filesTable(r)}`;
+}
+function nodeCard(n,cls){return `<div class="node ${cls||''}"><span class="role">${esc(n['역할'])}</span>
+  <div class="who">${esc(n['개인명'])||'—'}</div><div class="pos">${esc(n['직위명'])||''}</div>
+  <div class="dept">${esc(n['부서명'])||''}</div>${n['처리결과']?`<div class="res">✔ ${esc(n['처리결과'])}</div>`:''}
+  ${n['의견내용']?`<div class="op">“${esc(n['의견내용'])}”</div>`:''}</div>`;}
+function renderProcess(r){
+  if(r.type==='지시카드'){const ins=r.instr;
+    let flow=`<div class="node instr"><span class="role">지시자</span><div class="who">${esc(ins['지시자'])} <span class="badge vip">VIP지시</span></div>
+      <div class="pos">${esc(ins['지시자직위'])}</div><div class="dept">대통령비서실</div><div class="res">${esc(ins['지시일자'])} 지시</div></div>`;
+    r.line.forEach(n=>flow+=`<div class="arrow">→</div>`+nodeCard(n));
+    return `<h2 class="sec">지시 정보</h2><div class="instrbox"><div class="grid2">
+        <div><div class="q">지시제목</div><div class="a">${esc(ins['지시제목'])}</div></div>
+        <div><div class="q">지시일자 / 지시구분</div><div class="a">${esc(ins['지시일자'])} · ${esc(ins['지시구분'])} ${ins['VIP지시여부']==='true'?'<span class="badge vip">VIP</span>':''}</div></div></div>
+      <div class="q">지시내용</div><div class="a">${nl2(ins['지시내용'])}</div>
+      <div class="grid2"><div><div class="q">지시계기</div><div class="a">${esc(ins['지시계기'])}</div></div>
+      <div><div class="q">해당과제</div><div class="a">${esc(ins['해당과제'])}</div></div></div></div>
+    <h2 class="sec">이행 경로 (결재선 상당)</h2>
+    <p class="hint">지시사항관리카드는 결재선 대신 지시자 → 이행주관 → 이행참조/이행공유(협조) 처리 경로로 구성됩니다.</p>
+    <div class="flow">${flow}</div>
+    <h2 class="sec">추진계획 · 진행결과</h2><div class="instrbox">
+      <div class="q">추진계획</div><div class="a">${nl2(ins['추진계획'])}</div>
+      <div class="grid2"><div><div class="q">이행방법</div><div class="a">${esc(ins['이행방법'])}</div></div>
+      <div><div class="q">관리부서 · 중간점검</div><div class="a">${esc(ins['관리부서'])} · ${esc(ins['중간점검일자'])}</div></div></div>
+      <div class="q">진행상태</div><div class="a"><span class="badge">${esc(ins['진행상태'])}</span></div>
+      <div class="q">진행상황(종료보고)</div><div class="a">${nl2(ins['진행상황'])}</div></div>`;
+  }
+  if(r.type==='문서관리카드'){
+    const cls={보고:'rpt',지시:'dir',종료:'end',기안:'prod',검토:'rpt',결재:'dir'};
+    let flow='';
+    r.line.forEach((n,idx)=>{ if(idx)flow+=`<div class="arrow">→</div>`; flow+=nodeCard(n,cls[n['역할']]||''); });
+    return `<h2 class="sec">결재 · 처리 경로</h2>
+    <p class="hint">문서관리카드는 기안·보고 → 결재(지시/시행) → 종료의 처리 경로로 결재됩니다.
+      <span class="psum">참조 ${r.doc['참조수']}명 · 공람 ${r.doc['공람수']}명 (총 경로 ${r.doc['경로총수']}명)</span></p>
+    <div class="flow">${flow}</div>
+    <div class="note">이 문서는 국가균형발전위원회 전 부서에 공람된 협조요청 문서로, 실제 결재 라인(보고→위원장 지시/시행→종료) 외에 다수의 참조·공람자가 경로에 포함되어 있습니다.</div>`;
+  }
+  const prod=r.actors.find(a=>a['행위자유형']==='생산자')||{};
+  const reg=r.actors.find(a=>a['행위자유형']==='등록자')||{};
+  const chg=r.actors.find(a=>a['행위자유형']==='담당자');
+  let flow=nodeCard({'역할':'생산자','개인명':prod['개인명'],'직위명':prod['직위명'],'부서명':prod['부서명'],'처리결과':(r.meta['생산일자']||'')+' 생산'},'prod');
+  flow+=`<div class="arrow">→</div>`+nodeCard({'역할':'등록자','개인명':reg['개인명']||'기록관리시스템','직위명':reg['직위명']||'','부서명':reg['부서명']||'대통령비서실 기록관리비서관실','처리결과':'RMS 등록·이관'},'reg');
+  if(chg)flow+=`<div class="arrow">→</div>`+nodeCard({'역할':'담당자','개인명':chg['개인명'],'직위명':chg['직위명'],'부서명':chg['부서명']},'');
+  return `<h2 class="sec">생산 · 등록 처리 흐름</h2>
+  <p class="hint">${r.type} 유형 기록은 결재선이 아니라 <b>생산 → 등록(RMS 이관)</b> 처리 이력으로 관리됩니다.</p>
+  <div class="flow">${flow}</div><h2 class="sec">기록 개요</h2><div class="instrbox"><div class="grid2">
+      <div><div class="q">${r.type==='일정'?'일정 제목':'일지 제목'}</div><div class="a">${esc(r.journal['일지제목'])}</div></div>
+      <div><div class="q">추진일자 / 종류</div><div class="a">${esc(r.journal['추진일자'])} · ${esc(r.journal['일지종류']||r.journal['일정구분']||r.type)}</div></div></div>
+    ${r.journal['장소']?`<div class="q">장소</div><div class="a">${esc(r.journal['장소'])}</div>`:''}
+    ${r.journal['공유자']&&r.journal['공유자'].length?`<div class="q">공유자</div><div class="a">${esc(r.journal['공유자'].join(', '))}</div>`:''}</div>`;
+}
+function renderContent(r){const j=r.journal;
+  return `<h2 class="sec">${r.type==='일정'?'일정 내용':'업무일지 내용'}</h2><div class="instrbox"><div class="grid2">
+      <div><div class="q">제목</div><div class="a">${esc(j['일지제목'])}</div></div>
+      <div><div class="q">추진일자</div><div class="a">${esc(j['추진일자'])}</div></div></div>
+    <div class="q">내용</div><div class="a">${j['내용']?nl2(j['내용']):'<span class="empty">본문 텍스트 없음 — 첨부문서를 참조</span>'}</div></div>
+  ${r.n>1?'<div class="note">상세 내용은 「첨부파일」 탭의 원문 문서(HWP/PDF/XLS)에서 확인할 수 있습니다.</div>':''}`;
+}
+function renderDocPurpose(r){
+  const steps=r.line.map(n=>`<div class="item"><div class="hd"><span class="dt">${esc((n['처리결과']||'').match(/\d{4}\.\d{2}\.\d{2}/)?.[0]||'')}</span>
+    <span class="kind">${esc(n['역할'])}</span><span class="dept">${esc(n['부서명'])}</span></div>
+    <div class="ti">${esc(n['개인명'])} ${esc(n['직위명'])}</div>${n['처리결과']?`<div class="body">처리결과: ${esc(n['처리결과'])}</div>`:''}</div>`).join('');
+  return `<h2 class="sec">문서취지</h2><div class="instrbox"><div class="a">${esc(r.doc['문서취지'])||'<span class="empty">기재 없음</span>'}</div></div>
+  <h2 class="sec">결재 라인 (요약)</h2><div class="tl">${steps}</div>
+  <h2 class="sec">참여 규모</h2>
+  <div class="instrbox"><div class="grid2">
+    <div><div class="q">결재·보고</div><div class="a">${r.line.length}명</div></div>
+    <div><div class="q">참조 / 공람</div><div class="a">${r.doc['참조수']}명 / ${r.doc['공람수']}명</div></div>
+  </div><div class="q">총 경로 인원</div><div class="a">${r.doc['경로총수']}명</div></div>`;
+}
+function renderTimeline(r){
+  let h=`<h2 class="sec">추진실적 및 일지 · ${r.timeline.length}건</h2><p class="hint">지시 이행 과정의 보고·일지·회의록을 시간순으로 복원했습니다.</p><div class="tl">`;
+  r.timeline.forEach(t=>{const log=t['구분']==='일지';
+    let att='';
+    if(t['첨부']&&t['첨부'].length){att='<div class="att">'+t['첨부'].map(fn=>{
+      const a=r.attachments.find(x=>x.name===fn||x.name.endsWith(fn));
+      return a?`<a href="${href(a)}" target="_blank">${esc(fn)}</a>`:`<span style="font-size:11.5px;color:#6b7683">📎 ${esc(fn)}</span>`;}).join(' &nbsp; ')+'</div>';}
+    h+=`<div class="item ${log?'ilog':''}"><div class="hd"><span class="dt">${esc(t['일자'])}</span>
+      <span class="kind ${log?'log':''}">${esc(t['구분']||'보고')}</span><span class="dept">${esc(t['부서'])}</span></div>
+      <div class="ti">${esc(t['제목'])}</div>${t['내용']?`<div class="body">${nl2(t['내용'])}</div>`:''}
+      ${t['개선']?`<div class="imp">개선방향: ${nl2(t['개선'])}</div>`:''}${att}</div>`;});
+  return h+'</div>';
+}
+function renderFiles(r){const pdfs=r.attachments.filter(a=>a.ext==='pdf');
+  return `<h2 class="sec">첨부파일 목록</h2>${filesTable(r)}
+  ${pdfs.length?`<div class="viewer"><div class="vt"><span>PDF 미리보기 (보존본)</span>
+    <select id="pdfSel">${pdfs.map(a=>`<option value="${esc(a.path)}">${esc(a.name)} · ${a.sizeh}</option>`).join('')}</select></div>
+    <iframe id="pdfFrame"></iframe></div>`:''}
+  <div class="note">HWP·XLS 원문은 브라우저 미리보기가 불가하여 다운로드로 제공됩니다. XML은 「원본 XML」 탭에서 확인하세요.</div>`;
+}
+function renderXml(r){const x=r.attachments.find(a=>a.ext==='xml');
+  return `<h2 class="sec">결재과정 원본 XML · 대통령기록 장기보존포맷</h2>
+  <div class="filesbar" style="margin:0 0 10px"><span class="hint">${esc(x.name)} · ${x.sizeh}</span>
+    <a href="${href(x)}" download="${esc(x.name)}" class="dl">XML 다운로드</a></div>
+  <div class="raw" id="rawXml">원문을 불러오는 중…</div>`;
+}
+function loadXmlText(r){const x=r.attachments.find(a=>a.ext==='xml');const el=document.getElementById('rawXml');
+  fetch(href(x)).then(res=>res.text()).then(txt=>{
+    txt=txt.replace(/(<DocumentData[^>]*>)[^<]{200,}(<\/DocumentData>)/g,'$1[…base64 문서데이터 생략…]$2');
+    el.textContent=txt.slice(0,200000);
+  }).catch(()=>{el.textContent='XML을 불러오지 못했습니다. files/ 경로를 확인하세요.';});
+}
+function selectRec(i){CUR=i;const r=D.records[i];
+  document.querySelectorAll('#recsel .card').forEach(c=>c.classList.toggle('on',+c.dataset.r===i));
+  document.getElementById('hdrTitle').textContent=' — '+r.meta['제목'];
+  const labels=tabsFor(r);
+  document.getElementById('tabs').innerHTML=labels.map((l,ti)=>`<button data-p="${ti}" class="${ti===0?'on':''}">${l}</button>`).join('');
+  const third=r.type==='지시카드'?renderTimeline(r):(r.type==='문서관리카드'?renderDocPurpose(r):renderContent(r));
+  const P=[renderDetail(r),renderProcess(r),third,renderFiles(r),renderXml(r)];
+  for(let p=0;p<5;p++){const el=document.getElementById('p'+p);el.innerHTML=P[p];el.classList.toggle('hide',p!==0);}
+  document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    const pi=+b.dataset.p;for(let p=0;p<5;p++)document.getElementById('p'+p).classList.toggle('hide',p!==pi);
+    if(labels[pi]==='첨부파일'){const s=document.getElementById('pdfSel');if(s)showPdf(s.value);}
+    if(labels[pi]==='원본 XML')loadXmlText(r);
+  });
+}
+function showPdf(path){document.getElementById('pdfFrame').src=encodeURI(path);}
+document.getElementById('recsel').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)selectRec(+c.dataset.r);});
+document.body.addEventListener('change',e=>{if(e.target.id==='pdfSel')showPdf(e.target.value);});
+selectRec(0);
+</script>
+</body>
+</html>
